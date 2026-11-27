@@ -34,6 +34,7 @@ module ID(
     input rs2_shortcut_en,                      // rs2_EX捷径加载使能
     input NOP_call,                             // NOP信号拉高则本周期Inst输出NOP，等价于清空当前指令输出
     input writeback_en,                         // WB写回使能，拉高则允许写入寄存器
+    input x0_call,                              // 针对lui指令，立即数生成后经过ALU不需要进行计算，此时x0_call将Addr_A读为x0
     // ID输出信号
     output reg [31:0] pc_EX,                    // ID -> EX 流水线寄存器
     output [31:0] rs1_EX,                       // ID -> EX 流水线寄存器
@@ -47,9 +48,9 @@ module ID(
 
     localparam NOP = 32'h0000_0013;
 
-    assign rs1_addr = inst_ID[19:15];           // rs1对应寄存器所在地址
-    assign rs2_addr = inst_ID[24:20];           // rs2对应寄存器所在地址
-    assign rd_addr = inst_WB[11:7];             // rd 对应寄存器所在地址
+    assign rs1_addr = x0_call ? 5'd0 : inst_ID[19:15];              // rs1对应寄存器所在地址（x0_call则读取x0）
+    assign rs2_addr = inst_ID[24:20];                               // rs2对应寄存器所在地址
+    assign rd_addr = inst_WB[11:7];                                 // rd 对应寄存器所在地址
 
     always @(posedge clk or posedge rst) begin  // PC，Inst寄存器直接打一拍，但Inst需要考虑是否需要NOP
         if (rst) begin
