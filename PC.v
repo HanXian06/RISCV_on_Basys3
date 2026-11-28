@@ -30,6 +30,9 @@ module PC(
     output reg [31:0] pc_reg    // 考虑auipc、jal需要计算，此时PC输出需要为32位
     );
 
+    wire [31:0] addr;
+    // 此处为适应jalr指令，直接将地址的最低位强制置0；而对于PC加载的指令，地址一定是4的倍数，所以强制置0不会对其他指令有影响。
+    assign addr = {load_addr[31:1], 1'b0};
     assign inst_addr = pc_reg[11:2];
 
     always @(posedge clk or posedge rst) begin
@@ -38,7 +41,7 @@ module PC(
         end
         else begin
             if (load) begin     // 加载外部输入
-                pc_reg <= load_addr;
+                pc_reg <= addr;
             end
             else if (en) begin  // PC + 4正常计数
                 pc_reg <= pc_reg + 32'd4;
